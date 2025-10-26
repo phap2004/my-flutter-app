@@ -1,0 +1,71 @@
+lib/
+├── main.dart
+│
+├── core/
+│   ├── constants/        # Chứa các giá trị cố định: màu, font, spacing
+│   │   ├── app_colors.dart
+│   │   ├── app_styles.dart
+│   │   └── app_assets.dart
+│   │
+│   └── utils/            # Hàm tiện ích dùng chung
+│       ├── format_price.dart
+│       └── validators.dart
+│
+├── models/               # Các model (User, Product, Order, Cart, Review, ...)
+│   ├── user_model.dart
+│   ├── product_model.dart
+│   ├── cart_model.dart
+│   ├── order_model.dart
+│   └── review_model.dart
+│
+├── services/             # Tầng kết nối dữ liệu (Firebase / API)
+│   ├── auth_service.dart
+│   ├── product_service.dart
+│   ├── cart_service.dart
+│   ├── order_service.dart
+│   └── review_service.dart
+│
+├── providers/            # Nếu dùng Riverpod / Provider để quản lý state
+│   ├── user_provider.dart
+│   ├── cart_provider.dart
+│   ├── product_provider.dart
+│   └── order_provider.dart
+│
+├── ui/                   # Toàn bộ phần giao diện (UI)
+│   ├── screens/          # Mỗi màn hình chính
+│   │   ├── auth/         # Đăng nhập, đăng ký
+│   │   │   ├── login_screen.dart
+│   │   │   └── signup_screen.dart
+│   │   │
+│   │   ├── home/         # Trang chủ
+│   │   │   ├── home_screen.dart
+│   │   │   ├── widgets/
+│   │   │   │   ├── product_card.dart
+│   │   │   │   └── category_chip.dart
+│   │   │
+│   │   ├── product/      # Chi tiết sản phẩm
+│   │   │   └── product_detail_screen.dart
+│   │   │
+│   │   ├── cart/         # Giỏ hàng
+│   │   │   └── cart_screen.dart
+│   │   │
+│   │   ├── order/        # Đơn hàng
+│   │   │   ├── order_list_screen.dart
+│   │   │   └── order_detail_screen.dart
+│   │   │
+│   │   ├── seller/       # Màn hình quản lý của người bán (nếu có)
+│   │   │   ├── seller_dashboard.dart
+│   │   │   └── add_product_screen.dart
+│   │   │
+│   │   └── profile/      # Hồ sơ cá nhân
+│   │       └── profile_screen.dart
+│   │
+│   └── widgets/          # Widget tái sử dụng
+│       ├── app_button.dart
+│       ├── app_textfield.dart
+│       ├── product_tile.dart
+│       ├── empty_state.dart
+│       └── loading_indicator.dart
+│
+└── routes/               # Điều hướng giữa các màn hình
+    └── app_routes.dart
