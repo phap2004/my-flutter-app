@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:login_app/cards/cardSocialButton.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:login_app/screens/sing-in/screen_signin.dart';
 
 class ScreenUserSignup extends StatefulWidget {
   const ScreenUserSignup({super.key});
@@ -21,6 +22,7 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
 
   bool isLoading = false;
   bool _obscurePassword = true;
+  bool signed = false;
   Future<void> signUpWithGoogle() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
@@ -150,6 +152,13 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
       );
     } finally {
       setState(() => isLoading = false);
+    }
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => ScreenSignin()),
+        (route) => false,
+      );
     }
   }
 
