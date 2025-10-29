@@ -52,10 +52,8 @@ class _ScreenSellerSignupState extends State<ScreenSellerSignup> {
       setState(() => isLoading = true);
 
       // Tạo tài khoản Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       User? user = userCredential.user;
 
@@ -73,7 +71,6 @@ class _ScreenSellerSignupState extends State<ScreenSellerSignup> {
           backgroundColor: Colors.green,
         ),
       );
-    
     } on FirebaseAuthException catch (e) {
       String message = 'Lỗi đăng ký';
       if (e.code == 'email-already-in-use') {
@@ -132,7 +129,9 @@ class _ScreenSellerSignupState extends State<ScreenSellerSignup> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đăng ký Google thành công: ${user.displayName ?? "Không tên"}'),
+          content: Text(
+            'Đăng ký Google thành công: ${user.displayName ?? "Không tên"}',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -165,11 +164,13 @@ class _ScreenSellerSignupState extends State<ScreenSellerSignup> {
                   child: Column(
                     children: [
                       TextField(
+                        textInputAction: TextInputAction.next,
                         controller: _emailController,
                         decoration: inputDecoration('Email/Số điện thoại'),
                       ),
                       const SizedBox(height: 10),
                       TextField(
+                        textInputAction: TextInputAction.next,
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: inputDecoration('Mật khẩu').copyWith(
@@ -180,7 +181,9 @@ class _ScreenSellerSignupState extends State<ScreenSellerSignup> {
                               });
                             },
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                               color: Colors.grey,
                             ),
                           ),
@@ -188,21 +191,25 @@ class _ScreenSellerSignupState extends State<ScreenSellerSignup> {
                       ),
                       const SizedBox(height: 10),
                       TextField(
+                        textInputAction: TextInputAction.next,
                         controller: _confirmController,
                         obscureText: _obscurePassword,
-                        decoration: inputDecoration('Lặp lại mật khẩu').copyWith(
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: Colors.grey,
+                        decoration: inputDecoration('Lặp lại mật khẩu')
+                            .copyWith(
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.grey,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 15),
 
@@ -216,16 +223,33 @@ class _ScreenSellerSignupState extends State<ScreenSellerSignup> {
                           ),
                         ),
                         child: isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Đăng ký', style: TextStyle(color: Colors.white)),
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                'Đăng ký',
+                                style: TextStyle(color: Colors.white),
+                              ),
                       ),
 
                       const SizedBox(height: 15),
                       Row(
                         children: const [
-                          Expanded(child: Divider(color: Colors.grey, thickness: 1, endIndent: 10)),
+                          Expanded(
+                            child: Divider(
+                              color: Colors.grey,
+                              thickness: 1,
+                              endIndent: 10,
+                            ),
+                          ),
                           Text('Hoặc'),
-                          Expanded(child: Divider(color: Colors.grey, thickness: 1, indent: 10)),
+                          Expanded(
+                            child: Divider(
+                              color: Colors.grey,
+                              thickness: 1,
+                              indent: 10,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 20),

@@ -180,9 +180,11 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
                       TextField(
                         controller: _emailController,
                         decoration: inputDecoration('Email'),
+                        textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: 10),
                       TextField(
+                        textInputAction: TextInputAction.next,
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: inputDecoration('Mật khẩu').copyWith(
@@ -203,6 +205,7 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
                       ),
                       const SizedBox(height: 10),
                       TextField(
+                        textInputAction: TextInputAction.next,
                         controller: _confirmController,
                         obscureText: _obscurePassword,
                         decoration: inputDecoration('Nhập lại mật khẩu')
