@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+//import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:flutter/material.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod/legacy.dart';
 import 'package:login_app/screens/home/screen_admin_home.dart';
@@ -147,7 +147,7 @@ Future<User?> signInWithGoogle(BuildContext context) async {
   }
 }
 
-Future<User?> logIntoHome(String role, BuildContext context) async {
+Future<void> logIntoHome(String role, BuildContext context) async {
   switch (role) {
     case 'admin':
       {
