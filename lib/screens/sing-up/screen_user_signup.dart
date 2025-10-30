@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:login_app/cards/cardSocialButton.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:login_app/screens/sing-in/screen_signin.dart';
+import 'package:login_app/core/auth.dart';
 
 class ScreenUserSignup extends StatefulWidget {
   const ScreenUserSignup({super.key});

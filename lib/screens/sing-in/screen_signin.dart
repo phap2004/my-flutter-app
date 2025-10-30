@@ -106,8 +106,18 @@ class _ScreenSigninState extends ConsumerState<ScreenSignin> {
                       ElevatedButton(
                         focusNode: loginFocus,
                         onPressed: () async {
-                          if (mounted) {
+                          try {
                             Loggin(e, p, 1, context);
+                          } on FirebaseAuthException catch (e) {
+                            if (!context.mounted) {
+                              return;
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.message ?? "Lỗi đăng nhập"),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
                           }
                         },
 
