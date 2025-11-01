@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:login_app/cards/cardSocialButton.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:login_app/screens/sing-in/screen_signin.dart';
+
 import 'package:login_app/core/auth.dart';
 
 class ScreenUserSignup extends StatefulWidget {
@@ -24,147 +23,12 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
   bool isLoading = false;
   bool _obscurePassword = true;
   bool signed = false;
-  Future<void> signUpWithGoogle() async {
-    try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email', 'https://www.googleapis.com/auth/userinfo.profile'],
-      );
-
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return; // Người dùng hủy đăng nhập
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-      final user = userCredential.user;
-
-      // 🔹 Kiểm tra và thêm vào Firestore nếu chưa có
-      final docRef = _firestore.collection('users').doc(user!.uid);
-      final doc = await docRef.get();
-
-      if (!doc.exists) {
-        await docRef.set({
-          'uid': user.uid,
-          'email': user.email,
-          'name': user.displayName,
-          'role': 'user', // role mặc định là user
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Đăng ký Google thành công: ${user.displayName ?? "Không tên"}',
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      Navigator.pop(context); // quay về trang đăng nhập sau khi đăng ký
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi đăng ký Google: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> signup() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final confirm = _confirmController.text.trim();
-
-    if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mật khẩu không trùng khớp!'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng nhập đầy đủ thông tin.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mật khẩu không trùng khớp!'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    try {
-      setState(() => isLoading = true);
-
-      // Tạo tài khoản trên Firebase Authentication
-      UserCredential userCredential = await _auth
-          .createUserWithEmailAndPassword(email: email, password: password);
-
-      User? user = userCredential.user;
-
-      // Lưu thông tin vào Firestore
-      await _firestore.collection('users').doc(user!.uid).set({
-        'uid': user.uid,
-        'email': user.email,
-        'role': 'user', // mặc định role = user
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đăng ký thành công!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } on FirebaseAuthException catch (e) {
-      String message = 'Lỗi đăng ký';
-      if (e.code == 'email-already-in-use') {
-        message = 'Email đã được sử dụng!';
-      } else if (e.code == 'invalid-email') {
-        message = 'Email không hợp lệ!';
-      } else if (e.code == 'weak-password') {
-        message = 'Mật khẩu quá yếu!';
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khác: $e'), backgroundColor: Colors.red),
-      );
-    } finally {
-      setState(() => isLoading = false);
-    }
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => ScreenSignin()),
-        (route) => false,
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirm = _confirmController.text.trim();
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(color: Color(0xFFF4EDE1)),
@@ -229,7 +93,8 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
                       const SizedBox(height: 15),
 
                       ElevatedButton(
-                        onPressed: isLoading ? null : signup,
+                        onPressed: () =>
+                            signUp(email, password, confirm, context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFD65F30),
                           minimumSize: const Size(400, 40),
@@ -273,7 +138,28 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
                       buildSocialButton(
                         imgPath: 'assets/gglogo.png',
                         text: 'Đăng ký bằng Google',
-                        onTap: signUpWithGoogle,
+                        onTap: () async {
+                          try {
+                            final log = await signInWithGoogle(context);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Đăng ký Google thành công'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+
+                              Navigator.pop(context);
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Lỗi đăng ký Google: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
                       ),
                       const SizedBox(height: 10),
                       buildSocialButton(

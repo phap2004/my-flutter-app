@@ -11,6 +11,7 @@ import 'package:login_app/screens/home/screen_admin_home.dart';
 import 'package:login_app/screens/home/screen_seller_home.dart';
 import 'package:login_app/screens/home/screen_seller_infor.dart';
 import 'package:login_app/screens/home/screen_user_home.dart';
+import 'package:login_app/screens/sing-in/screen_signin.dart';
 // import 'package:login_app/screens/sing-up/screen_user_signup.dart';
 // import 'package:login_app/screens/sing-up/screen_seller_signup.dart';
 
@@ -18,6 +19,7 @@ final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
 final isLoading = StateProvider<bool>((ref) => false);
 
+//------Main function for login------
 Future<User?> Loggin(
   String? e,
   String? p,
@@ -46,6 +48,7 @@ Future<User?> Loggin(
   }
 }
 
+//-------GET ROLE TO CHANGE SCREENS-------
 Future<String> getRoleFromMethod({
   String? e,
   String? p,
@@ -78,6 +81,36 @@ Future<String> getRoleFromMethod({
   return role!;
 }
 
+//-------GET UID TO CHANGE SCREENS-------
+Future<String> getIDFromMethod({
+  String? e,
+  String? p,
+  required int method,
+  required context,
+}) async {
+  String? uid;
+  switch (method) {
+    case 1:
+      {
+        final getMethod = await signInWithEmail(e!, p!, context);
+        if (getMethod == null) {
+          print('Đăng nhập lỗi, không có user');
+          return 'null';
+        }
+        uid = getMethod.uid;
+        break;
+      }
+    case 2:
+      {
+        final getMethod = await signInWithGoogle(context!);
+        uid = getMethod!.uid;
+        break;
+      }
+  }
+  return uid!;
+}
+
+//------- SIGNIN -------
 Future<User?> signInWithEmail(String e, String p, BuildContext context) async {
   try {
     final userCredential = await _auth.signInWithEmailAndPassword(
@@ -124,7 +157,7 @@ Future<User?> signInWithGoogle(BuildContext context) async {
     final userCredential = await _auth.signInWithCredential(credential);
     final user = userCredential.user;
 
-    // Kiểm tra / thêm mới user
+    // Kiem tra / them moi user
     final docRef = _firestore.collection('users').doc(user!.uid);
     final doc = await docRef.get();
     String role;
@@ -147,6 +180,7 @@ Future<User?> signInWithGoogle(BuildContext context) async {
   }
 }
 
+//-------Change Screens--------
 Future<void> logIntoHome(String role, BuildContext context) async {
   switch (role) {
     case 'admin':
@@ -183,7 +217,107 @@ Future<void> logIntoHome(String role, BuildContext context) async {
         );
       }
   }
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Đăng nhập thành công (${role.toUpperCase()})')),
-  );
+  if (!context.mounted) {
+    return;
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Đăng nhập thành công (${role.toUpperCase()})')),
+    );
+  }
+}
+
+//-------SIGN UP-------
+Future<void> signUp(
+  String email,
+  String password,
+  String confirm,
+  BuildContext context,
+) async {
+  if (password != confirm) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Mật khẩu không trùng khớp!'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  if (email.isEmpty || password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Vui lòng nhập đầy đủ thông tin.'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+    return;
+  }
+  if (password != confirm) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Mật khẩu không trùng khớp!'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  try {
+    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    User? user = userCredential.user;
+
+    // save infor into firestore
+    await _firestore.collection('users').doc(user!.uid).set({
+      'uid': user.uid,
+      'email': user.email,
+      'role': 'user', //default role = user
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    if (!context.mounted) {
+      return;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đăng ký thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  } on FirebaseAuthException catch (e) {
+    String message = 'Lỗi đăng ký';
+    if (e.code == 'email-already-in-use') {
+      message = 'Email đã được sử dụng!';
+    } else if (e.code == 'invalid-email') {
+      message = 'Email không hợp lệ!';
+    } else if (e.code == 'weak-password') {
+      message = 'Mật khẩu quá yếu!';
+    }
+    if (!context.mounted) {
+      return;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    }
+  } catch (e) {
+    if (!context.mounted) {
+      return;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khác: $e'), backgroundColor: Colors.red),
+      );
+    }
+  } finally {}
+  if (context.mounted) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => ScreenSignin()),
+      (route) => false,
+    );
+  }
 }
