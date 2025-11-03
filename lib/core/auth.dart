@@ -227,97 +227,111 @@ Future<void> logIntoHome(String role, BuildContext context) async {
 }
 
 //-------SIGN UP-------
-Future<void> signUp(
+Future<User?> signup(
   String email,
   String password,
-  String confirm,
+  String confirmPassword,
+  String role,
   BuildContext context,
 ) async {
-  if (password != confirm) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Mật khẩu không trùng khớp!'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
-  if (email.isEmpty || password.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Vui lòng nhập đầy đủ thông tin.'),
-        backgroundColor: Colors.orange,
-      ),
-    );
-    return;
-  }
-  if (password != confirm) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Mật khẩu không trùng khớp!'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
   try {
-    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+    // Kiểm tra dữ liệu nhập
+    if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng nhập đầy đủ thông tin.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return null;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mật khẩu không trùng khớp!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+
+    // Kiểm tra tài khoản đã tồn tại trong Firestore
+    final existingUser = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (existingUser.docs.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tài khoản này đã tồn tại trong hệ thống!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+
+    // Tạo tài khoản trên Firebase Auth
+    final userCredential = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    User? user = userCredential.user;
+    final user = userCredential.user;
+    if (user == null) throw Exception('Không tạo được tài khoản!');
 
-    // save infor into firestore
-    await _firestore.collection('users').doc(user!.uid).set({
+    // Lưu thông tin người dùng vào Firestore
+    await _firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'email': user.email,
-      'role': 'user', //default role = user
+      'role': role.isNotEmpty ? role : 'user', // nếu chưa truyền thì mặc định là user
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    if (!context.mounted) {
-      return;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đăng ký thành công!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  } on FirebaseAuthException catch (e) {
-    String message = 'Lỗi đăng ký';
-    if (e.code == 'email-already-in-use') {
-      message = 'Email đã được sử dụng!';
-    } else if (e.code == 'invalid-email') {
-      message = 'Email không hợp lệ!';
-    } else if (e.code == 'weak-password') {
-      message = 'Mật khẩu quá yếu!';
-    }
-    if (!context.mounted) {
-      return;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
-    }
-  } catch (e) {
-    if (!context.mounted) {
-      return;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khác: $e'), backgroundColor: Colors.red),
-      );
-    }
-  } finally {}
-  if (context.mounted) {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => ScreenSignin()),
-      (route) => false,
+    // Hiển thị thông báo
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đăng ký $role thành công!'),
+        backgroundColor: Colors.green,
+      ),
     );
+
+    // Chuyển hướng sang màn hình đăng nhập
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const ScreenSignin()),
+        (route) => false,
+      );
+    }
+
+    return user;
+  } on FirebaseAuthException catch (e) {
+    String message;
+    if (e.code == 'email-already-in-use') {
+      message = 'Email này đã được đăng ký.';
+    } else if (e.code == 'invalid-email') {
+      message = 'Email không hợp lệ.';
+    } else if (e.code == 'weak-password') {
+      message = 'Mật khẩu quá yếu.';
+    } else {
+      message = 'Lỗi khác: ${e.message}';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+    return null;
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Lỗi khác: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return null;
   }
 }
+
