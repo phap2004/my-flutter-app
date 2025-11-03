@@ -29,6 +29,7 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final confirm = _confirmController.text.trim();
+    final String role = 'user';
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(color: Color(0xFFF4EDE1)),
@@ -94,7 +95,7 @@ class _ScreenUserSignupState extends State<ScreenUserSignup> {
 
                       ElevatedButton(
                         onPressed: () =>
-                            signUp(email, password, confirm, context),
+                            signUp(email, password, role, confirm, context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFD65F30),
                           minimumSize: const Size(400, 40),
